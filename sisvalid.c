@@ -38,6 +38,7 @@
 // Macros
 //
 
+#define DRIVERINFO printk(KERN_INFO "[sisvalid] %s : %d\n", __func__, __LINE__)
 
 //
 // Type definitions
@@ -52,7 +53,8 @@ PrintResync(
     __in     PRESYNC_BUFFER ResyncBuffer
     );
 
-
+extern unsigned int DbgMsgFilter;
+extern unsigned int DbgMsgFilterTemp;
 //
 // Local function prototype.
 //
@@ -61,8 +63,8 @@ PrintResync(
 //
 // Global variable definitions
 //
-//BOOLEAN UseSimpleHead = TRUE;
-BOOLEAN UseSimpleHead = FALSE;
+BOOLEAN UseSimpleHead = TRUE;
+// BOOLEAN UseSimpleHead = FALSE;
 
 
 //
@@ -374,6 +376,7 @@ OemGetCmd9FrameDataLen(
     ConfidenceFlag = GET_CMD9_PARAM_CONFIDENCE_FLAG(DataType);
 
     Length = (((XCount + YCount) * (1 + ConfidenceFlag)) + CrcFlag) * sizeof(CMD9_DATA);
+    printk(KERN_INFO "CMD9 no header data length %d \n", Length);
 
     TExit(Func, ("=%d", Length));
     return Length;
@@ -543,6 +546,11 @@ OemFillCommandInfo(
 #define VAL_CMD9_PRECISE_DEFAULT    7
             CommandInfo->Cmd9Info.Precise = VAL_CMD9_PRECISE_DEFAULT;
             CommandInfo->Cmd9Info.PointCount = CommandInfo->Cmd9Info.XCount * CommandInfo->Cmd9Info.YCount;
+            printk(KERN_INFO "FrameID = %x\n", CommandInfo->Cmd9Info.FrameId);
+            printk(KERN_INFO "XCount = %x\n", CommandInfo->Cmd9Info.XCount);
+            printk(KERN_INFO "YCount = %x\n", CommandInfo->Cmd9Info.YCount);
+            printk(KERN_INFO "CrcFlag = %x\n", CommandInfo->Cmd9Info.UseCrc);
+            printk(KERN_INFO "ConfidenceFlag = %x\n", CommandInfo->Cmd9Info.UseConfidence);
             break;
         default:
             TErr(("No command type %4x.", RawCommand->CmdType));
@@ -697,6 +705,7 @@ OemIsFrameValid(
     if (UseSimpleHead)
     {
         RawParser->FrameId = RawCommand.Cmd9Param.FrameId;
+        printk(KERN_INFO "FrameId : %d\n", RawParser->FrameId);
     }
 
 	// fill command info
@@ -740,14 +749,28 @@ OemIsResyncDataValid(
         while (pb < pbEnd)
         {
             pb++;
-            if (pb > (pbEnd - NUMBYTE_RAWDATA_HEAD))
+            if (UseSimpleHead) // jiunhau change order
             {
+                if (OemIsCmd9DataTypeValid(pb[1])) // only valid data type // todo reset frame ID
+                {
+                    ResyncBuffer->BytesInBuff = (ULONG)(pbEnd - pb);
+                    MEMMOVE(pbStart, pb, ResyncBuffer->BytesInBuff);
+                    MEMSETZERO(pb, ResyncBuffer->BytesInBuff); // jiunhau add
+                    MTInfo(MSGFLTR_INPUTDATA, ("(OemIsResyncDataValid) 3."));
+                    PrintResync(ResyncBuffer);
+                    DRIVERINFO;
+                    break;
+                }
+            }
+            else if (pb > (pbEnd - NUMBYTE_RAWDATA_HEAD))
+            {
+
                 ResyncBuffer->BytesInBuff = (ULONG)(pbEnd - pb);
                 MEMMOVE(pbStart, pb, ResyncBuffer->BytesInBuff);
                 RawParser->ReadMoreBytes = TRUE;
-
                 MTInfo(MSGFLTR_INPUTDATA, ("(OemIsResyncDataValid) 1."));
                 PrintResync(ResyncBuffer);
+                DRIVERINFO;
                 break;
             }
             else if (OemIsHeadValid(pb))
@@ -757,25 +780,16 @@ OemIsResyncDataValid(
 
                 MTInfo(MSGFLTR_INPUTDATA, ("(OemIsResyncDataValid) 2."));
                 PrintResync(ResyncBuffer);
+                DRIVERINFO;
                 break;
             }
-            else if (UseSimpleHead)
-            {
-                if (OemIsCmd9DataTypeValid(pb[1])) // only valid data type // todo reset frame ID
-                {
-                    ResyncBuffer->BytesInBuff = (ULONG)(pbEnd - pb);
-                    MEMMOVE(pbStart, pb, ResyncBuffer->BytesInBuff);
 
-                    MTInfo(MSGFLTR_INPUTDATA, ("(OemIsResyncDataValid) 3."));
-                    PrintResync(ResyncBuffer);
-                    break;
-                }
-            }
         } // while
 
         if (pb >= pbEnd)
         {
             ResyncBuffer->BytesInBuff = 0;
+            MEMSETZERO(pbStart, SIZE_INPUT_SYNC_BUFF); // jiunhau add
         }
 	}
 

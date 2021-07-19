@@ -27,7 +27,6 @@
 // Constants
 //
 
-
 //
 // Macro
 //
@@ -41,7 +40,6 @@
 //
 // Extern function prototype.
 //
-
 
 //
 // Local function prototype.
@@ -149,7 +147,7 @@ OemGetInputBuffIndex(
     if (i == NUM_INPUT_SWAP)
     {
         i = 0;
-        TErr(("(OemGetInputBuffIndex) no match buffer."));
+        TErr(("(OemGetInputBuffIndex) no match buffer.")); 
     }
 
     TExit(Func, ("=%d", i));
@@ -242,12 +240,16 @@ OemGetInputReadLen(
     ULONG i, BytesToRead = 0;
 
     TEnter(Func, ("(InputBuffers=%p,Irp=%p)", InputBuffers, Irp));
-
-    for (i = 0; i < NUM_INPUT_SWAP; i++)
+	printk(KERN_INFO "[SIS] InputBuffers->InputBuffer[0].BytesToRead = %d\n",
+		   InputBuffers->InputBuffer[0].BytesToRead);
+	BytesToRead = InputBuffers->InputBuffer[0].BytesToRead;
+#if 0
+	for (i = 0; i < NUM_INPUT_SWAP; i++)
     {
         if (InputBuffers->InputBuffer[i].Irp == Irp)
         {
             BytesToRead = InputBuffers->InputBuffer[i].BytesToRead;
+			printk(KERN_INFO "[SIS_DRIVER] BytesToRead = %d\n", BytesToRead);
             break;
         }
     }
@@ -256,8 +258,8 @@ OemGetInputReadLen(
     {
         TErr(("(OemGetInputReadLen) no match buffer."));
     }
-
     TExit(Func, ("=%d", BytesToRead));
+#endif
     return BytesToRead;
 }       //OemGetInputReadLen
 
@@ -338,7 +340,6 @@ OemIsResyncEmpty(
     BOOLEAN rc = FALSE;
 
     TEnter(Func, ("(ResyncBuffer=%p)", ResyncBuffer));
-
     if (ResyncBuffer->BytesInBuff == 0)
     {
         rc = TRUE;
@@ -406,6 +407,7 @@ OemResyncMoveOffset(
         MEMMOVE(&ResyncBuffer->ResyncData[0],
                 &ResyncBuffer->ResyncData[0] + Offset,
                 ResyncBuffer->BytesInBuff);
+        MEMSETZERO(&ResyncBuffer->ResyncData[0] + Offset, ResyncBuffer->BytesInBuff); // jiunhau
     }
 
     TExit(Func, ("!"));
@@ -420,7 +422,6 @@ OemResyncCat(
     )
 {
     TEnter(Func, ("(ResyncBuffer=%p)", ResyncBuffer));
-
     MEMMOVE((PUCHAR)&ResyncBuffer->ResyncData[0] + ResyncBuffer->BytesInBuff, CatBuffer, CatLength);
     ResyncBuffer->BytesInBuff += CatLength;
 
@@ -440,21 +441,20 @@ OemResyncCatInput(
 
     TEnter(Func, ("(ResyncBuffer=%p)", ResyncBuffer));
 
+#ifndef LINUX
     TAssert(ResyncBuffer->BytesInBuff <= sizeof(ResyncBuffer->ResyncData));
+#endif
     if (ResyncBuffer->BytesInBuff > sizeof(ResyncBuffer->ResyncData)) //SIZE_INPUT_SYNC_BUFF
     {
         TErr(("(OemResyncCatInput) BytesInBuff %d > buffer size %d.", ResyncBuffer->BytesInBuff, sizeof(ResyncBuffer->ResyncData)));
         BytesToRead = sizeof(ResyncBuffer->ResyncData) - ResyncBuffer->BytesInBuff;
+        //printk(KERN_INFO "[QQ] BytesToRead = %d | ResyncData = %d | BytesInBuff = %d\n", BytesToRead, sizeof(ResyncBuffer->ResyncData), ResyncBuffer->BytesInBuff);
     }
-
     OemResyncCat(ResyncBuffer, RawInput, BytesToRead);
     ResyncBuffer->Stamp = OemGetInputStamp(InputBuffers, Irp);
-
     OemResetInputBuff(InputBuffers, Irp);
-
     MTInfo(MSGFLTR_INPUTDATA, ("(OemResyncCatInput) ResyncBuffer->Stamp %d, InputBuffer %p.\n", ResyncBuffer->Stamp, RawInput));
     PrintResync(ResyncBuffer);
-
     TExit(Func, ("!"));
     return;
 }       //OemResyncCatInput
@@ -468,11 +468,25 @@ PrintInput(
 //    PUCHAR RawInput = OemGetInputBuff(InputBuffers, Irp);
 //    ULONG BytesToRead = OemGetInputReadLen(InputBuffers, Irp);
 
+#if 1
     MTInfo(MSGFLTR_INPUTDATA, ("InputBuffer Irp: %p.", Irp));
-//    PrintMatrix(MSGFLTR_INPUTDATA, RawInput, BytesToRead, 16);
-	PrintMatrix(MSGFLTR_INPUTDATA, OemGetInputBuff(InputBuffers, Irp), 
+    PrintMatrix(MSGFLTR_INPUTDATA, RawInput, BytesToRead, 16); //jiunhau
+	PrintMatrix(MSGFLTR_INPUTDATA, OemGetInputBuff(InputBuffers, Irp),
 				OemGetInputReadLen(InputBuffers, Irp), 16);
-
+#endif
+#if 0	// jiunhau
+	int i, Align = 4, length = OemGetInputReadLen(InputBuffers, Irp);
+	PUCHAR buf = OemGetInputBuff(InputBuffers, Irp);
+	for (i = 0; i < length; i++)
+	{
+		printk(KERN_INFO "buf[%d] = %2x ", i, buf[i]);
+		if (!((i + 1) % Align))
+		{
+			printk(KERN_INFO "\n");
+		}
+	}
+	printk(KERN_INFO "\n");
+#endif
     return;
 }
 
@@ -482,7 +496,7 @@ PrintResync(
     __in     PRESYNC_BUFFER ResyncBuffer
     )
 {
-    MTInfo(MSGFLTR_INPUTDATA, ("ResyncBuffer Stamp: %p.", ResyncBuffer->Stamp));
+    MTInfo(MSGFLTR_INPUTDATA, ("ResyncBuffer Stamp: %X.", ResyncBuffer->Stamp));
     PrintMatrix(MSGFLTR_INPUTDATA, ResyncBuffer->ResyncData, ResyncBuffer->BytesInBuff, 16);
 
     return;

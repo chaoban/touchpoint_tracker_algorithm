@@ -16,15 +16,29 @@
 //
 // Key definitions
 //
+// #define DEBUG
 
+#ifndef LINUX
+#define LINUX
+#endif
 
 
 //
 // Constants
 //
-//#ifdef DEBUG
+#ifdef DEBUG
 #define API             "API"
 #define Func            "Func"
+
+#ifdef LINUX
+//extern unsigned int DbgMsgFilter;
+//extern unsigned int DbgMsgFilterTemp;
+//extern unsigned int DbgMsgFilter;
+//extern unsigned int DbgMsgFilterTemp;
+#else
+extern ULONG DbgMsgFilter;
+extern ULONG DbgMsgFilterTemp;
+#endif
 
 // Msg filter - general
 #define MSGFLTR_NONUSE          DbgMsgFilter
@@ -92,15 +106,22 @@
 #define MSGTYPE_WARN            (0x1 << (5 + MSGTYPE_SHIFT))
 #define MSGTYPE_INFO            (0x1 << (6 + MSGTYPE_SHIFT))
 #define MSGTYPE_MODULE          (0x1 << (7 + MSGTYPE_SHIFT))
-//#endif
+#endif
 
 
 //
 // Macros
 //
+
 #ifdef DEBUG
-  #define DBGMSG(x)             KdPrint(x)
-  #define DBGBREAK              DbgBreakPoint
+	#ifdef LINUX
+#define DBGMSG(x)			printk x
+#define DBGBREAK
+	#else
+#define DBGMSG(x)			KdPrint(x)
+unsigned int DbgMsgFilter = MSGFLTR_DEFAULT;
+unsigned int DbgMsgFilterTemp = MSGFLTR_DEFAULT;
+	#endif
 #else
   #define DBGMSG(x)
   #define DBGBREAK
@@ -108,8 +129,13 @@
 
 #ifdef DEBUG
 
+#ifdef LINUX
+#define IS_DBGTYPE(t)           1
+#define IS_DBGMODULE()          1
+#else
 #define IS_DBGTYPE(t)           (t & DbgMsgFilter)
 #define IS_DBGMODULE()          (MSGMDL_ID & DbgMsgFilter)
+#endif
 
 #define TAssert(x)                                  \
 {                                                   \
@@ -245,7 +271,16 @@
 #endif
 
 #ifdef DEBUG
-
+#ifdef LINUX
+#define MTAssert(f, x)			TAssert(x)
+#define MTEnter(f, n, p)		TEnter(n, p)
+#define MTExit(f, n, p)			TExit(n, p)
+#define MTFatal(f, x)			TFatal(x)
+#define MTErr(f, x)				TErr(x)
+#define MTWarn(f, x)			TWarn(x)
+#define MTInfo(f, x)			TInfo(x)
+#define MTPrint(f, x)			TPrint(x)
+#else
 #define MTAssert(f, x)                      \
 {                                           \
     DbgMsgFilterTemp = DbgMsgFilter;        \
@@ -333,7 +368,7 @@
     TPrint(x);                              \
     DbgMsgFilter = DbgMsgFilterTemp;        \
 }
-
+#endif
 #else
 #define MTAssert(f, x)
 #define MTEnter(f, n, p)
@@ -355,6 +390,9 @@
 // Function prototypes
 //
 #ifdef DEBUG
+#ifdef LINUX
+#define PrintMatrix(f, b, l, a)
+#else
 VOID INTERNAL
 PrintMatrix(
     __in     ULONG MsgFilter,
@@ -362,6 +400,7 @@ PrintMatrix(
     __in     ULONG Length,
     __in     ULONG Align
     );
+#endif
 #else
 #define PrintMatrix(f, b, l, a)
 #endif
@@ -370,10 +409,13 @@ PrintMatrix(
 //
 // Global Data Declarations
 //
+#if 0
 #ifdef DEBUG
 extern ULONG DbgMsgFilter;
 extern ULONG DbgMsgFilterTemp;
 #endif
+#endif
 
 
 #endif  //ifndef _WTRACE_H
+

@@ -33,12 +33,11 @@
 //
 #define NUM_TPINFO_DEFAULT          20
 
-
 //
 // Macro
 //
 #define GET_ALG_PRECISE(precise) (0x1 << precise)
-
+#define DRIVERINFO printk(KERN_INFO "[sistrans] %s : %d\n", __func__, __LINE__)
 
 //
 // Type definitions
@@ -49,7 +48,6 @@
 // Extern function prototype.
 //
 int TPDetector( char *dataLA, int *TPnum, TouchPointInfo *TP );  //LINUX
-
 
 //
 // Local function prototype.
@@ -473,7 +471,7 @@ OemNormalizeInputData(
     TouchPointInfo *TpInfo = NULL;
     ULONG TpNum = 0;
     PUCHAR FrameData = CommandInfo->FrameDataBuff;
-
+    DRIVERINFO;
     TEnter(Func, ("(CommandInfo=%p, InData=%p, FrameData=%p)", CommandInfo, InData, FrameData));
 
     if (FrameData == NULL)

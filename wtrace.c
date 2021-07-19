@@ -50,8 +50,13 @@
 // Global variable definitions
 //
 #ifdef DEBUG
+#ifdef LINUX
+//unsigned int DbgMsgFilter = 0;
+//unsigned int DbgMsgFilterTemp = 0;
+#else
 ULONG DbgMsgFilter = MSGFLTR_DEFAULT;
 ULONG DbgMsgFilterTemp = MSGFLTR_DEFAULT;
+#endif
 #endif
 
 
@@ -70,7 +75,6 @@ PrintMatrix(
 {
     ULONG i;
     UNREFERENCED_PARAMETER(MsgFilter);
-//    UNREFERENCED_PARAMETER(MsgFilter);
 
     TInfo(("Address: %p, Length: %d.", Buffer, Length));
     for (i = 0; i < Length; i++)

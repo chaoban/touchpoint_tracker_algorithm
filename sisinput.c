@@ -20,12 +20,11 @@
 //
 // Key definitions
 //
-
+#define DRIVERINFO printk(KERN_INFO "[sisinput] %s : %d\n", __func__, __LINE__)
 
 //
 // Constants
 //
-
 
 //
 // Macros
@@ -137,7 +136,7 @@ PrintResync(
 //
 // Global variable definitions
 //
-
+static int run_time = 0;
 
 //
 // Precess input data functions
@@ -174,7 +173,9 @@ ProcessResyncBuffer(
     TEnter(Func, ("(ResyncBuffer=%p,RawParser=%p,HidReport=%p)",
                   ResyncBuffer, RawParser, HidReport));
 
+#ifndef LINUX
     TAssert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+#endif
 
     while (!OemIsResyncEmpty(ResyncBuffer) && !ReadMoreBytes)
     {
@@ -186,13 +187,15 @@ ProcessResyncBuffer(
             }
             else
             {
+            	DRIVERINFO;
                 status = OemNormalizeInputData(&CommandInfo,
                                                &HidReport->Report);
             }
 
             Offset = OemGetProcessedRawDataLen (RawParser);
+            printk(KERN_INFO "offset : %x\n", Offset);
             OemResyncMoveOffset(ResyncBuffer, Offset);
-
+            DRIVERINFO;
             MTInfo(MSGFLTR_INPUTDATA, ("(ProcessResyncBuffer)."));
             PrintResync(ResyncBuffer);
 
@@ -203,7 +206,9 @@ ProcessResyncBuffer(
         }
         else
         {
+        	DRIVERINFO;
             ReadMoreBytes = (BOOLEAN)OemGetParserReadStatus(RawParser);
+            printk(KERN_INFO "ReadMoreBytes : %x\n", ReadMoreBytes);
         }
     }
 
@@ -240,34 +245,52 @@ ProcessInputData(
     NTSTATUS status;
     COMMAND_INFO CommandInfo = {0};
     PUCHAR RawInput;
+    int i = 0;
     ULONG Offset;
     ULONG BytesToRead = OemGetInputReadLen(InputBuffers, Irp);
-
-    TEnter(Func,
+	TEnter(Func,
            ("(InputBuffers=%p,ResyncBuffer=%p,RawParser=%p,Irp=%p,HidReport=%p)",
             InputBuffers, ResyncBuffer, RawParser, Irp, HidReport));
 
     MTInfo(MSGFLTR_INPUTDATA, ("ProcessInputData (1) snyc data count %d, information value %d.", ResyncBuffer->BytesInBuff, BytesToRead));
     MTInfo(MSGFLTR_INPUTDATA, ("(ProcessInputData) InputBuffer Irp %p.", Irp));
     PrintInput (InputBuffers, Irp);
-
     RawInput = OemGetInputBuff (InputBuffers, Irp);
-    if (OemIsResyncEmpty(ResyncBuffer) &&
+    for(i = 0; i < BytesToRead; i++)
+    {
+		printk(KERN_INFO "%x  ", RawInput[i]);
+    }
+    printk(KERN_INFO "\n");
+
+    if (run_time == 0)
+    {
+    	ResyncBuffer->BytesInBuff = 0;
+    	MEMSETZERO(&ResyncBuffer->ResyncData[0], SIZE_INPUT_SYNC_BUFF);
+    	run_time++;
+    }
+    // jiunhau
+
+	if (OemIsResyncEmpty(ResyncBuffer) &&
         OemIsFrameValid(RawInput, RawInput + BytesToRead, RawParser, &CommandInfo))
     {
         if (OnlyValid)
         {
             status = STATUS_SUCCESS;
+			DRIVERINFO;
         }
         else
         {
             status = OemNormalizeInputData(&CommandInfo, &HidReport->Report);
+			DRIVERINFO;
         }
 
         // move input buffer remainder to resync buffer
         Offset = OemGetProcessedRawDataLen (RawParser);
-        OemInputMoveOffset(InputBuffers, Irp, Offset);
-        OemResyncCatInput(ResyncBuffer, InputBuffers, Irp);
+		DRIVERINFO;
+		OemInputMoveOffset(InputBuffers, Irp, Offset);
+		DRIVERINFO;
+		OemResyncCatInput(ResyncBuffer, InputBuffers, Irp);
+		DRIVERINFO;
     }
     else
     {
@@ -287,12 +310,12 @@ ProcessInputData(
         }
 
         OemResyncCatInput(ResyncBuffer, InputBuffers, Irp);
-
+		DRIVERINFO; // QQ
         MTInfo(MSGFLTR_INPUTDATA, ("ProcessInputData (3) snyc data count %d, information value %d.", ResyncBuffer->BytesInBuff, BytesToRead));
 
-//		status = ProcessResyncBuffer(ResyncBuffer, RawParser, HidReport, FALSE);
-        status = ProcessResyncBuffer(ResyncBuffer, RawParser, HidReport, OnlyValid); //chaoban test
-        if (ResyncBuffer->BytesInBuff > 0x180)
+        status = ProcessResyncBuffer(ResyncBuffer, RawParser, HidReport, OnlyValid);
+		DRIVERINFO; // QQ
+		if (ResyncBuffer->BytesInBuff > 0x180)
         {
             MTErr(MSGFLTR_INPUTDATA, ("snyc data count %d exceed buffer length.", ResyncBuffer->BytesInBuff));
         }

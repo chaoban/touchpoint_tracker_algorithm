@@ -57,7 +57,7 @@
 #define OEM_MT_MAX_COUNT        2
 #endif // __UpdateToTouchMode
 
-#define NUM_INPUT_SWAP          2
+#define NUM_INPUT_SWAP          1
 #define SIZE_RAW_INPUT_BUFF     128
 #define SIZE_INPUT_SYNC_BUFF    ((SIZE_RAW_INPUT_BUFF) * 3)
 
@@ -118,8 +118,8 @@ typedef unsigned char		UCHAR;
 typedef unsigned char*		PUCHAR;
 typedef unsigned short		USHORT;
 typedef unsigned short*		PUSHORT;
-typedef unsigned long		ULONG;
-typedef unsigned long*		PULONG;
+typedef unsigned int		ULONG;
+typedef unsigned int*		PULONG;
 typedef unsigned int	    UINT32;
 typedef _Bool               BOOLEAN;
 typedef PUCHAR              PIRP;
