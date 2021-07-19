@@ -187,15 +187,14 @@ ProcessResyncBuffer(
             }
             else
             {
-            	DRIVERINFO;
+            	//DRIVERINFO;
                 status = OemNormalizeInputData(&CommandInfo,
                                                &HidReport->Report);
             }
 
             Offset = OemGetProcessedRawDataLen (RawParser);
-            printk(KERN_INFO "offset : %x\n", Offset);
             OemResyncMoveOffset(ResyncBuffer, Offset);
-            DRIVERINFO;
+            //DRIVERINFO;
             MTInfo(MSGFLTR_INPUTDATA, ("(ProcessResyncBuffer)."));
             PrintResync(ResyncBuffer);
 
@@ -206,9 +205,8 @@ ProcessResyncBuffer(
         }
         else
         {
-        	DRIVERINFO;
+        	//DRIVERINFO;
             ReadMoreBytes = (BOOLEAN)OemGetParserReadStatus(RawParser);
-            printk(KERN_INFO "ReadMoreBytes : %x\n", ReadMoreBytes);
         }
     }
 
@@ -256,12 +254,13 @@ ProcessInputData(
     MTInfo(MSGFLTR_INPUTDATA, ("(ProcessInputData) InputBuffer Irp %p.", Irp));
     PrintInput (InputBuffers, Irp);
     RawInput = OemGetInputBuff (InputBuffers, Irp);
+#if 0
     for(i = 0; i < BytesToRead; i++)
     {
 		printk(KERN_INFO "%x  ", RawInput[i]);
     }
     printk(KERN_INFO "\n");
-
+#endif
     if (run_time == 0)
     {
     	ResyncBuffer->BytesInBuff = 0;
@@ -276,21 +275,21 @@ ProcessInputData(
         if (OnlyValid)
         {
             status = STATUS_SUCCESS;
-			DRIVERINFO;
+			//DRIVERINFO;
         }
         else
         {
             status = OemNormalizeInputData(&CommandInfo, &HidReport->Report);
-			DRIVERINFO;
+			//DRIVERINFO;
         }
 
         // move input buffer remainder to resync buffer
         Offset = OemGetProcessedRawDataLen (RawParser);
-		DRIVERINFO;
+	//	DRIVERINFO;
 		OemInputMoveOffset(InputBuffers, Irp, Offset);
-		DRIVERINFO;
+		//DRIVERINFO;
 		OemResyncCatInput(ResyncBuffer, InputBuffers, Irp);
-		DRIVERINFO;
+		//DRIVERINFO;
     }
     else
     {
@@ -310,11 +309,11 @@ ProcessInputData(
         }
 
         OemResyncCatInput(ResyncBuffer, InputBuffers, Irp);
-		DRIVERINFO; // QQ
+		//DRIVERINFO; // QQ
         MTInfo(MSGFLTR_INPUTDATA, ("ProcessInputData (3) snyc data count %d, information value %d.", ResyncBuffer->BytesInBuff, BytesToRead));
 
         status = ProcessResyncBuffer(ResyncBuffer, RawParser, HidReport, OnlyValid);
-		DRIVERINFO; // QQ
+		//DRIVERINFO; // QQ
 		if (ResyncBuffer->BytesInBuff > 0x180)
         {
             MTErr(MSGFLTR_INPUTDATA, ("snyc data count %d exceed buffer length.", ResyncBuffer->BytesInBuff));

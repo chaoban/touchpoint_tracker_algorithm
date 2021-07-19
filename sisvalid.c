@@ -376,7 +376,6 @@ OemGetCmd9FrameDataLen(
     ConfidenceFlag = GET_CMD9_PARAM_CONFIDENCE_FLAG(DataType);
 
     Length = (((XCount + YCount) * (1 + ConfidenceFlag)) + CrcFlag) * sizeof(CMD9_DATA);
-    printk(KERN_INFO "CMD9 no header data length %d \n", Length);
 
     TExit(Func, ("=%d", Length));
     return Length;
@@ -546,11 +545,13 @@ OemFillCommandInfo(
 #define VAL_CMD9_PRECISE_DEFAULT    7
             CommandInfo->Cmd9Info.Precise = VAL_CMD9_PRECISE_DEFAULT;
             CommandInfo->Cmd9Info.PointCount = CommandInfo->Cmd9Info.XCount * CommandInfo->Cmd9Info.YCount;
+#if 0
             printk(KERN_INFO "FrameID = %x\n", CommandInfo->Cmd9Info.FrameId);
             printk(KERN_INFO "XCount = %x\n", CommandInfo->Cmd9Info.XCount);
             printk(KERN_INFO "YCount = %x\n", CommandInfo->Cmd9Info.YCount);
             printk(KERN_INFO "CrcFlag = %x\n", CommandInfo->Cmd9Info.UseCrc);
             printk(KERN_INFO "ConfidenceFlag = %x\n", CommandInfo->Cmd9Info.UseConfidence);
+#endif
             break;
         default:
             TErr(("No command type %4x.", RawCommand->CmdType));
@@ -705,7 +706,6 @@ OemIsFrameValid(
     if (UseSimpleHead)
     {
         RawParser->FrameId = RawCommand.Cmd9Param.FrameId;
-        printk(KERN_INFO "FrameId : %d\n", RawParser->FrameId);
     }
 
 	// fill command info
@@ -758,7 +758,7 @@ OemIsResyncDataValid(
                     MEMSETZERO(pb, ResyncBuffer->BytesInBuff); // jiunhau add
                     MTInfo(MSGFLTR_INPUTDATA, ("(OemIsResyncDataValid) 3."));
                     PrintResync(ResyncBuffer);
-                    DRIVERINFO;
+                    //DRIVERINFO;
                     break;
                 }
             }
@@ -770,7 +770,7 @@ OemIsResyncDataValid(
                 RawParser->ReadMoreBytes = TRUE;
                 MTInfo(MSGFLTR_INPUTDATA, ("(OemIsResyncDataValid) 1."));
                 PrintResync(ResyncBuffer);
-                DRIVERINFO;
+                //DRIVERINFO;
                 break;
             }
             else if (OemIsHeadValid(pb))
@@ -780,7 +780,7 @@ OemIsResyncDataValid(
 
                 MTInfo(MSGFLTR_INPUTDATA, ("(OemIsResyncDataValid) 2."));
                 PrintResync(ResyncBuffer);
-                DRIVERINFO;
+                //DRIVERINFO;
                 break;
             }
 

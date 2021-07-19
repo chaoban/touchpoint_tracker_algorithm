@@ -320,8 +320,10 @@ OemTransToAlgInput(
 #endif
                     PosX = GET_CMD9_DATA_POS(i);
                     PosY = GET_CMD9_DATA_POS(j + CommandInfo->Cmd9Info.XCount);
+                    //printk(KERN_INFO "ID = %d | PosX = %x | PosY = %x \n", TpIndex, PosX, PosY);
                     TpInfo[TpIndex].PosX = (float)((float)(PosX & 0xFFFF) / (float)GET_ALG_PRECISE(CommandInfo->Cmd9Info.Precise)); // todo remove 0xffff
                     TpInfo[TpIndex].PosY = (float)((float)(PosY & 0xFFFF) / (float)GET_ALG_PRECISE(CommandInfo->Cmd9Info.Precise));
+                    //printk(KERN_INFO "TpInfo[%d].PosX = %x | TpInfo[%d].PosY = %x \n", TpIndex, TpInfo[TpIndex].PosX, TpIndex, TpInfo[TpIndex].PosY);
                     if (CommandInfo->Cmd9Info.UseConfidence)
                     {
                         TpInfo[TpIndex].Confidence = 
@@ -471,7 +473,7 @@ OemNormalizeInputData(
     TouchPointInfo *TpInfo = NULL;
     ULONG TpNum = 0;
     PUCHAR FrameData = CommandInfo->FrameDataBuff;
-    DRIVERINFO;
+
     TEnter(Func, ("(CommandInfo=%p, InData=%p, FrameData=%p)", CommandInfo, InData, FrameData));
 
     if (FrameData == NULL)
@@ -529,7 +531,8 @@ OemNormalizeInputData(
             }
 #endif // __TWO_TOUCH_TRACKER
 //            status = TPDetector(NULL, (int *)&TpNum, TpInfo); //LINUX
-            status = Tracker( (int *)&TpNum, TpInfo );
+            status = Tracker( (int *)&TpNum, TpInfo ); // Algorithm
+
             break;
         default:
             status = STATUS_DATA_ERROR;

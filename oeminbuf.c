@@ -240,8 +240,8 @@ OemGetInputReadLen(
     ULONG i, BytesToRead = 0;
 
     TEnter(Func, ("(InputBuffers=%p,Irp=%p)", InputBuffers, Irp));
-	printk(KERN_INFO "[SIS] InputBuffers->InputBuffer[0].BytesToRead = %d\n",
-		   InputBuffers->InputBuffer[0].BytesToRead);
+	//printk(KERN_INFO "[SIS] InputBuffers->InputBuffer[0].BytesToRead = %d\n",
+	//	   InputBuffers->InputBuffer[0].BytesToRead);
 	BytesToRead = InputBuffers->InputBuffer[0].BytesToRead;
 #if 0
 	for (i = 0; i < NUM_INPUT_SWAP; i++)
