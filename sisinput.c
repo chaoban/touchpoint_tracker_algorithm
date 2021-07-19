@@ -290,7 +290,8 @@ ProcessInputData(
 
         MTInfo(MSGFLTR_INPUTDATA, ("ProcessInputData (3) snyc data count %d, information value %d.", ResyncBuffer->BytesInBuff, BytesToRead));
 
-        status = ProcessResyncBuffer(ResyncBuffer, RawParser, HidReport, FALSE);
+//		status = ProcessResyncBuffer(ResyncBuffer, RawParser, HidReport, FALSE);
+        status = ProcessResyncBuffer(ResyncBuffer, RawParser, HidReport, OnlyValid); //chaoban test
         if (ResyncBuffer->BytesInBuff > 0x180)
         {
             MTErr(MSGFLTR_INPUTDATA, ("snyc data count %d exceed buffer length.", ResyncBuffer->BytesInBuff));
