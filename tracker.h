@@ -1,0 +1,167 @@
+#ifndef __TRACKER_H__
+#define __TRACKER_H__
+
+
+#ifndef __COMMON_H__
+#include "common.h"
+#endif
+
+// FSM STATE
+#define STATE_P0 0
+#define STATE_P1 1
+#define STATE_D2 2
+#define STATE_D4 3
+#define STATE_D4G 4
+
+// SUBTYPE
+// D2 subtype
+#define SUBTYPE_S2 0
+#define SUBTYPE_N2 1
+#define SUBTYPE_E2 2
+#define SUBTYPE_W2 3 
+// D4 subtype
+#define SUBTYPE_SE4 4
+#define SUBTYPE_SW4 5
+#define SUBTYPE_NE4 6
+#define SUBTYPE_NW4 7 
+// D4G subtype
+#define SUBTYPE_SSW4 8
+#define SUBTYPE_SSE4 9
+#define SUBTYPE_NNW4 10
+#define SUBTYPE_NNE4 11
+#define SUBTYPE_ENE4 12
+#define SUBTYPE_ESE4 13
+#define SUBTYPE_WNW4 14
+#define SUBTYPE_WSW4 15
+#define SUBTYPE_ERR  9999
+//
+#define DIRECTION_VERTICAL 0
+#define DIRECTION_HORIZONTAL 1
+
+// Point State
+#define POINT_BIRTH 0
+#define POINT_DEATH 1
+#define POINT_MOVE  2
+
+#define PRECISION  128
+#define MAXLINKDP  128 * 9
+#define PIVOTSDP   128 * 1
+
+
+#define ClonePoint( a, b ) \
+a.PosX = b.PosX; \
+a.PosY = b.PosY; \
+
+#if 0
+typedef struct
+{
+    int   ID;
+    int   PosX;
+    int   PosY;
+    int   State;
+    int   Confidence;
+} TouchPointInfo;
+#endif
+
+struct Globalt
+{
+    int MaximumLinkDistance;
+    int PivotStationaryDistance;
+
+    int Threshold_Point0_Point1;
+    int Threshold_Point0_Dual2;
+    int Threshold_Point1_Dual2;
+    int Threshold_Dual2_Point0;
+    int Threshold_Dual2_Point1;
+    int Threshold_Dual4_Dual2;
+
+    int Confidence_Point0_Dual4;
+};
+
+// State Mapping
+static const short D2_ID[4][2] =
+{
+    {0, 1},
+    {1, 0},
+    {0, 1},
+    {1, 0},
+};
+
+static const short D4_ID[4][2] =
+{
+    {0, 3}, 
+    {1, 2}, 
+    {2, 1}, 
+    {3, 0},
+};
+
+// State Transition Tables
+static const short D2_D4_TABLE[4][4] = 
+{
+    {SUBTYPE_SW4, SUBTYPE_SE4, SUBTYPE_SW4, SUBTYPE_SE4}, 
+    {SUBTYPE_NW4, SUBTYPE_NE4, SUBTYPE_NW4, SUBTYPE_NE4},
+    {SUBTYPE_NE4, SUBTYPE_NE4, SUBTYPE_SE4, SUBTYPE_SE4},
+    {SUBTYPE_NW4, SUBTYPE_NW4, SUBTYPE_SW4, SUBTYPE_SW4}
+};
+
+static const short D4_D2_TABLE[4][2] =
+{
+    {SUBTYPE_S2, SUBTYPE_E2},
+    {SUBTYPE_S2, SUBTYPE_W2},
+    {SUBTYPE_N2, SUBTYPE_E2},
+    {SUBTYPE_N2, SUBTYPE_W2}
+};
+
+static const short D4G_D4_TABLE[2][4] = 
+{
+    {SUBTYPE_SW4, SUBTYPE_SE4, SUBTYPE_NW4, SUBTYPE_NE4}, 
+    {SUBTYPE_NE4, SUBTYPE_NW4, SUBTYPE_SE4, SUBTYPE_SW4}, 
+};
+
+struct tagCTP
+{
+    // STATE
+    int State;
+    int StateNext;
+
+    //
+    int Age;
+
+    int TIDNext;
+    int DTIDNext;
+
+    // SUBTYPE
+    int Subtype;
+
+    int Direction;
+    int DirectionPrev;
+    //
+    int Birth;
+    int Death;
+    
+    int TPnumPrev;
+    int TPnumTrackPrev;
+    int TPnumDead;
+
+    int PivotIdx;
+    int TrackIdx;
+
+    // Track ID map
+    int TID[2];
+    int DTID[2];
+
+    int Width;
+    int WidthPrev;
+    int Height;
+    int HeightPrev;
+
+    TouchPointInfo Centroid, CentroidPrev, CentroidD2, CentroidD4, CentroidKalman, CentroidKalmanPrev;
+    TouchPointInfo TPSort[4], TPTrack[2], TPTrackPrev[2], TPDead[2];
+    TouchPointInfo Pivot;
+    TouchPointInfo TPFirst;
+};
+
+int Tracker( int *TPnum, TouchPointInfo *TP );
+
+#endif // end of __TRACKER_H__
+

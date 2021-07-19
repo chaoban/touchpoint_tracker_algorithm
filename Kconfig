@@ -1,0 +1,61 @@
+#
+# Touchscreen driver configuration
+#
+menuconfig TOUCHSCREEN_SIS
+	bool "sisTP"
+	help
+
+	  If unsure, say N.
+
+if TOUCHSCREEN_SIS
+
+config SIS_OEMINBUF
+	tristate "oeminbuf.c"
+	default y
+
+	help
+	  If unsure, say N .
+
+config SIS_SISINPUT
+	tristate "sisinput.c"
+	default y
+
+	help
+	  If unsure, say N.
+
+config SIS_SISTRANS
+	tristate "sistrans.c"
+	default y
+
+	help
+	  If unsure, say N.
+
+
+config SIS_SISVAILD
+	tristate "sisvalid.c"
+	default y
+
+	help
+	  If unsure, say N.
+
+config SIS_WTRACE
+	tristate "wtrace.c"
+	default y
+
+	help
+	  If unsure, say N.
+	
+config SIS_TRACKING_KALMAN
+	tristate "tracking_kalman.c"
+	default y
+
+	help
+	  If unsure, say N.
+	  
+config SIS_TRACKER
+	tristate "tracker.c"
+	default y
+
+	help
+	  If unsure, say N.  
+endif

@@ -1,0 +1,342 @@
+#define LINUX   1
+
+#ifdef LINUX
+#include <linux/kernel.h>
+#include <linux/io.h>
+#else
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+//#include <assert.h>
+#include <stdarg.h>
+#include <time.h>
+//#include <vector>
+//#include <queue>
+//#include <numeric>
+//#include <assert.h>
+#include <search.h>
+//#include <algorithm>
+#endif
+
+#include "global.h"
+//#include "log.h"
+
+//using namespace std;
+#define __COMMON_H__
+enum
+{    
+    MAXSIZE = 500,
+    GLOBALNUM = 300,
+    MAXTOUCHNUM = 100,
+    FRAMMAXSIZE = 100,
+    TABLEFRAMSIZE = 50,
+    MAXVOLTAGE = 512,
+    CHANNEL_NUM = 42,
+    CONNECTIVITY_4 = 4,
+    CONNECTIVITY_8 = 8,
+    RECORD_TAP_NUM = 6,
+    DILATION = 1,
+    EROSION = 2,
+    ROW_PROCESSING_NONE = 0,
+    ROW_PROCESSING_MEAN = 1,
+    ROW_PROCESSING_DCT = 2,
+    ROW_PROCESSING_WEIGHTING = 3,
+    ROW_PROCESSING_NORMALIZE = 4,
+    AXIS_X = 0,
+    AXIS_Y = 1,    
+    TPALGORITHM_GRADIENT = 0,
+    TPALGORITHM_2DMAGNITUDE = 1,	
+    TPALGORITHM_MAXLIKELIHOOD = 2,    
+    NORMAL_CONDITION = 1,
+    INIT_CONDITION = 2,
+    UPDATE_INIT_REPLACE = 0,
+    UPDATE_INIT_WEIGHTING = 1,
+    _TRUE = 1,
+    _FALSE = 0,
+    _PASS = 1,
+    _FAIL = 0,
+    ENABLE = 1,
+    DISABLE = 0, 
+    UPDATE_WITH_TABLE = 0,
+    UPDATE_WITH_LEARNING = 1,    
+    LEARNING_DATA_SIZE = 44,
+    _AUTOCALIBRATE = 0,
+    _SWCALIBRATE = 1,
+    _NOTOUCH = 0,
+    _LEAVE = 0,
+    _TOUCH = 1,
+    SNRMETHOD_TNT = 0,
+    SNRMETHOD_MAX = 1,
+    SNRMETHOD_MEAN = 2,
+    SUM_SQUARE = 0,
+    AXISNUM = 2,
+    FRAMENUM = 2,
+    SUM_ABSOLUTE = 1,
+    PATTERN_MODE = 1,
+    SERIAL_MODE = 2,
+    TRACK_MODE = 4,
+    _PREVIOUS = 0,
+    _CURRENT = 1,
+    FILTER_IDEAL = 0,
+    FILTER_BUTTER = 1,
+    FILTER_GAUSS = 2,
+    Kalman_Touch_num =10,
+    _DATA_RAW = 0,
+    _DATA_DCT = 1,
+    RAWSMOOTH_NONE = 0,
+    RAWSMOOTH_WEIGHTING = 1,
+    RAWSMOOTH_KALMAN = 2,
+    RAWSMOOTH_DYKALMAN = 3,
+    MaxQueueSize = 10,
+    CQueueSize = 4,
+    div_X = 5,
+    div_Y = 3,
+    DATA_NUM = 4,//for Java Interface
+    IIRTEST_IIRSMOOTH = 0,
+    IIRTEST_SMOOTHIIR = 1,
+    STATENUM = 2,
+    X_Decision = 0,
+    Y_Decision = 1,
+    ConstantLocationgFind = 0,
+    LearningStartEnd = 1
+};
+
+// UpdateThreshold
+enum
+{
+    UPDATE_THRESHOLD_NONE = 0,
+    UPDATE_THRESHOLD_BY_FRAMEMEAN0 = 1,
+    UPDATE_THRESHOLD_BY_FRAMEMEAN1 = 2,
+    UPDATE_THRESHOLD_BY_ROWDATAMEAN = 3,
+    UPDATE_THRESHOLD_BY_TOUCHCNT_FRAMEMEAN = 4
+};
+
+// UpdateDCT_ACH
+enum 
+{
+    DCT_ACH_NONE = 0,
+    DCT_ACH_CHANNELVARIANCE = 1,
+    DCT_ACH_FRAMEVARIANCE = 2, 
+    DCT_ACH_FRAMEMEAN = 3,
+    DCT_ACH_PAR_DONTCARE = 0,
+    DCT_ACH_ST_LOW = 0,
+    DCT_ACH_ST_HIGH = 1
+};
+
+// GradientMethod
+enum {
+    GRADIENT_BY_DCT = 0,
+    GRADIENT_BY_ROWDIFF = 1
+};
+
+//      STATE_IDLE                   STATE_IDLE
+//     -----------                  -------------
+//                \                /
+//  STATE_APPROACH \  STATE_TOUCH / STATE_LEAVE
+//                  --------------
+enum PanelState 
+{
+    STATE_IDLE,
+    STATE_APPROACH,
+    STATE_TOUCH,
+    STATE_LEAVE,
+};
+
+typedef enum _CalOperator
+{
+    OPR_MUL,
+    OPR_DIV,
+}CalOperator;
+
+enum TouchPointState
+{
+    POINT_BIRTH,    // 0
+    POINT_DEATH,    // 1
+    POINT_MOVE,     // 2
+    POINT_TAP,      // 3
+    NOTOUCH         // 4
+};
+
+enum
+{
+    NO_TOUCH = 0,
+    TOUCH_DETECTED = 1,
+    NONE_TOUCH = 0,
+    SINGLE_TOUCH = 1,
+    DUAL_TOUCH = 2,
+    MULTI_TOUCH = 3,
+};
+
+//Inner Boundary Tracing Directions
+enum
+{
+	ASPECT_LFT = 0,
+	ASPECT_BOT = 1,
+	ASPECT_RGT = 2,
+	ASPECT_TOP = 3,
+	ASPECT_LBT = 4,
+	ASPECT_RBT = 5,
+	ASPECT_RTP = 6,
+	ASPECT_LTP = 7
+};
+
+//Position Calculate Algorithm
+enum
+{
+    NUM_TAP_INTERPOLATE = 1,
+    CENTER_OF_MASS = 2,
+    INTR_NONE = 0,
+    INTR_GAUSSIAN = 1,
+    INTR_SINC = 2,
+    INTR_BUTTERWORTH = 3,
+};
+
+enum
+{
+    Kalman_start = 0,
+    Kalman_Daeth = 1,
+};
+
+enum CheckCondition
+{
+    NORMAL = 0,
+    NO_LOADING = 1,
+    CLOSE_SATURATION = 2,
+    LARGE_VARIANCE = 3,
+};
+
+typedef struct 
+{
+    int width;
+    int height;
+    int size;
+}DataInfo;
+
+typedef struct
+{
+    float x;
+    float y;
+    int DelX;
+    int DelY;
+    int Xstart;
+    int Xend;
+    int Ystart;
+    int Yend;
+    int Area;
+}RegionInfo;
+
+typedef struct
+{
+    float Pos;
+    int Pst;
+    int Pend;
+    int size;
+    int maxPos;
+    int remark;  
+    int ghost;
+    int validnum;
+    int match;
+    int ID;
+    float weight;
+    float variance;
+}SegmentInfo;
+# if 0
+typedef struct
+{
+    int     ID;
+    float   PosX;
+    float   PosY;
+    int     State;
+    float   DelX;
+    float   DelY;
+	float   Confidence;
+}TouchPointInfo;
+#endif
+
+typedef struct
+{
+    int   ID;
+    int   PosX;
+    int   PosY;
+    int   State;
+    int   Confidence;
+} TouchPointInfo;
+
+typedef struct  
+{
+    int   remark;
+    int   pos;
+    float threshold;
+    int   mark[CHANNEL_NUM];
+    float wetTable[CHANNEL_NUM];
+}LearningInfo;
+
+typedef struct  
+{
+    char   Type[100][50];
+    char   Name[100][50];
+    char   value[100][50];    
+}TempGlobal;
+
+typedef struct  
+{
+	float  K_x[3][1];
+	float  K_y[3][1];
+	float  P_x[3][3];
+	float  P_y[3][3]; 
+	float  YM_x;
+	float  YM_y;	
+}KalmanTemp;
+typedef struct  
+{
+    float  x[TABLEFRAMSIZE];
+    float  y[TABLEFRAMSIZE];  
+}MovementTemp;
+
+typedef struct  
+{
+    float  st;
+    float  k;
+    float  p;    
+}ChannelKalman;
+
+
+unsigned FPtoFixedNoRound( unsigned dwInValue, int nFraction );
+//void ShowInfo( char const* format, ... );
+//float absf( float in );
+
+#ifndef LINUX
+long filesize( FILE* in );
+#endif
+float CalculateByOp( float in1, float in2, CalOperator op );
+unsigned atoh( char* buf );
+void quicksort( float *data, int first, int last, int size );
+//void swap( float *a, float *b );
+float GammaCorrection( float data, float NormalizeSize, float factor, float gamma, int method );
+
+#define PrintInfo
+#define DUMPPATTERN
+#define DUMPCHECK
+#define DUMPDIFFPA
+#define DUMPTPLIST
+#define DUMPDIFFPAT
+#define printf
+#define fprintf
+#define fseek
+#define fclose
+#define fwrite
+
+//typedef enum _bool {
+//    false = 0,
+//    true  = 1
+//}bool;
+#ifdef FALSE
+#undef FALSE
+#endif
+#define FALSE                           (1 == 0)
+
+#ifdef TRUE
+#undef TRUE
+#endif
+#define TRUE                            (1 == 1)
